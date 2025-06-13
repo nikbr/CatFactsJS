@@ -87,6 +87,7 @@
   <ol id="facts"></ol>
 <script type="module">
     //Cat Fact Struct Factory
+let latestToken = 0; //async aborter
 function createCatFactStruct(fact, length){
     return {
         fact: fact, 
@@ -155,16 +156,20 @@ function processWithCallback(catFactObj, cb){
 }
 //async await
 async function processCatFacts(){
+    const myToken = ++latestToken;
     clearFacts();
     showError("");
     const factsArray = await catFactArray();
+    if (myToken !== latestToken) return;
     if(!factsArray.length) return;
 
     const gen = catFactGenerator(factsArray);
     let idx = 0;
     for(const catFactObj of gen) {
+        if (myToken !== latestToken || myToken !== latestToken) return;
         await new Promise(resolve => {
             processWithCallback(catFactObj, (err, processed) => {
+                if (myToken !== latestToken) return;
                 if(err){
                     showError("Error: " + err);
                     addFact(null, true);
@@ -174,6 +179,7 @@ async function processCatFacts(){
                 resolve();
             });
         });
+        if (myToken !== latestToken) return;
         await new Promise(response => setTimeout(response, 350));
     }
 }
@@ -199,17 +205,19 @@ function* chainedFactGenerator(facts){
 }
 
 async function runFactChainDemo(){
+    const myToken = ++latestToken;
     const list = document.getElementById('factchain');
     list.innerHTML = "";
     clearFacts();
     showError("Fetching facts for chain demo...");
     let factsArray = await catFactArray();
-    if(!factsArray.length) return;
+    if(!factsArray.length || myToken !== latestToken) return;
     showError("");
     const gen = chainedFactGenerator(factsArray);
     let step = 0;
     let feedData = {appended: 0, lastLength: 0};
     function nextStep(lastResult){
+        if (myToken !== latestToken) return;
         let result;
         if(step===0){
             result = gen.next();
